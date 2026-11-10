@@ -59,6 +59,8 @@
             align-items: center;
             box-shadow: var(--shadow);
             margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 12px;
         }
 
         .status-title {
@@ -68,6 +70,13 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        .status-right-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
         }
 
         .status-indicator {
@@ -169,6 +178,7 @@
             outline: none;
             transition: border-color 0.2s, box-shadow 0.2s;
             background-color: #fff;
+            width: 100%;
         }
 
         input:focus, select:focus {
@@ -178,6 +188,25 @@
 
         .custom-input {
             margin-top: 6px;
+        }
+
+        .price-input-row {
+            display: flex;
+            gap: 6px;
+            width: 100%;
+        }
+
+        .price-input-row input {
+            flex: 2;
+            min-width: 60px;
+        }
+
+        .price-input-row select {
+            flex: 1;
+            font-weight: bold;
+            background: #f8fafc;
+            padding: 8px 4px;
+            font-size: 0.85rem;
         }
 
         /* --- BUTTONS --- */
@@ -207,6 +236,9 @@
         .btn-secondary { background: #64748b; color: #fff; }
         .btn-secondary:hover { background: #475569; }
 
+        .btn-warning { background: var(--warning); color: #fff; }
+        .btn-warning:hover { background: #b45309; }
+
         .btn-outline {
             background: transparent;
             border: 1px solid var(--border-color);
@@ -221,8 +253,10 @@
 
         /* --- TABLES --- */
         .table-responsive {
+            width: 100%;
             overflow-x: auto;
             margin-top: 16px;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
@@ -230,6 +264,7 @@
             border-collapse: collapse;
             text-align: left;
             font-size: 0.92rem;
+            min-width: 500px;
         }
 
         th, td {
@@ -340,7 +375,7 @@
         .badge-pending { background: #fef3c7; color: #b45309; }
         .badge-printed { background: #dcfce7; color: #15803d; }
 
-        /* --- CUSTOM CENTERED MODAL --- */
+        /* --- CUSTOM CENTERED MODAL (TAM EKRAN UYUMLU) --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -350,7 +385,8 @@
             justify-content: center;
             align-items: center;
             z-index: 9999;
-            padding: 20px;
+            padding: 12px;
+            overflow-y: auto;
         }
 
         .modal-overlay.active { display: flex; }
@@ -358,12 +394,14 @@
         .modal-box {
             background: #fff;
             border-radius: var(--radius);
-            padding: 24px;
-            max-width: 450px;
+            padding: 20px;
             width: 100%;
+            max-width: 450px;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2);
             text-align: center;
             animation: modalPop 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         @keyframes modalPop {
@@ -388,14 +426,13 @@
             display: flex;
             justify-content: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
-        /* --- INSPECT MODAL SPECIFIC --- */
+        /* --- GENİŞ MODALLAR İÇİN TAM UYUM --- */
         .modal-box.large {
-            max-width: 850px;
+            max-width: 900px;
             text-align: left;
-            max-height: 90vh;
-            overflow-y: auto;
         }
 
         /* --- GİZLİ YAZDIRMA ALANI STİLLERİ --- */
@@ -445,9 +482,12 @@
         <div class="status-title">
             📦 SEVKİYAT VE YÜKLEME YÖNETİMİ
         </div>
-        <div class="status-indicator">
-            <div id="ledDot" class="led-dot"></div>
-            <span id="ledStatusText">BAĞLANTI BEKLENİYOR...</span>
+        <div class="status-right-group">
+            <button class="btn btn-warning btn-sm" onclick="openPriceModal()">⚙️ Fiyat Listesini Güncelle</button>
+            <div class="status-indicator">
+                <div id="ledDot" class="led-dot"></div>
+                <span id="ledStatusText">BAĞLANTI BEKLENİYOR...</span>
+            </div>
         </div>
     </div>
 
@@ -639,7 +679,6 @@
             </button>
         </div>
 
-        <!-- SÜTUNLU DÜZENDE RAPOR TABLOSU CONTAINER -->
         <div id="historyListContainer">
             <p style="text-align: center; color: var(--text-muted); padding: 20px;">Yükleniyor...</p>
         </div>
@@ -648,7 +687,121 @@
     <!-- GİZLİ YAZDIRMA ALANI -->
     <div id="printArea"></div>
 
-    <!-- ŞİFRE DOĞRULAMA MODALI (YENİ CİHAZ İÇİN) -->
+    <!-- ÜRÜN FİYATLARI, KUR, İNDİRİMLİ VE KDV GÜNCELLEME MODALI -->
+    <div class="modal-overlay" id="priceModal">
+        <div class="modal-box large">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="font-size: 1.2rem;">⚙️ Fiyat, Kur, İndirimli ve KDV Ayarları</h3>
+                <button class="btn btn-outline btn-sm" onclick="closePriceModal()">❌ Kapat</button>
+            </div>
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 16px;">
+                Fiyat girerken para birimini <strong>($ / ₺)</strong> ve birimi <strong>(Ton / KG)</strong> kolayca seçebilirsiniz.
+            </p>
+
+            <div style="margin-bottom: 20px; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid var(--border-color); display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;">
+                <div class="form-group">
+                    <label><strong>Döviz Kuru (TL)</strong></label>
+                    <input type="number" id="modalExchangeRate" placeholder="Örn: 55.00" step="any" style="background:#fff;">
+                </div>
+                <div class="form-group">
+                    <label><strong>İndirimli (%)</strong></label>
+                    <input type="number" id="modalCashRate" placeholder="Örn: 11" step="any" style="background:#fff;">
+                </div>
+                <div class="form-group">
+                    <label><strong>KDV (%)</strong></label>
+                    <input type="number" id="modalKdvRate" placeholder="Örn: 20" step="any" style="background:#fff;">
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 10px; color: var(--primary);">🔹 Dilme Sac Kalınlık Fiyatları</h4>
+            <div style="background: #eff6ff; padding: 14px; border-radius: 8px; border: 1px solid #bfdbfe; margin-bottom: 20px;" class="form-grid">
+                <div class="form-group">
+                    <label>0.45 mm Fiyatı</label>
+                    <div class="price-input-row">
+                        <input type="number" id="ds_045" placeholder="Değer" step="any">
+                        <select id="ds_045_cur"><option value="USD">$</option><option value="TL">₺</option></select>
+                        <select id="ds_045_unit"><option value="TON">Ton</option><option value="KG">KG</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>0.50 mm Fiyatı</label>
+                    <div class="price-input-row">
+                        <input type="number" id="ds_050" placeholder="Değer" step="any">
+                        <select id="ds_050_cur"><option value="USD">$</option><option value="TL">₺</option></select>
+                        <select id="ds_050_unit"><option value="TON">Ton</option><option value="KG">KG</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>0.55 mm Fiyatı</label>
+                    <div class="price-input-row">
+                        <input type="number" id="ds_055" placeholder="Değer" step="any">
+                        <select id="ds_055_cur"><option value="USD">$</option><option value="TL">₺</option></select>
+                        <select id="ds_055_unit"><option value="TON">Ton</option><option value="KG">KG</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>0.60 - 0.65 mm Fiyatı</label>
+                    <div class="price-input-row">
+                        <input type="number" id="ds_060_065" placeholder="Değer" step="any">
+                        <select id="ds_060_065_cur"><option value="USD">$</option><option value="TL">₺</option></select>
+                        <select id="ds_060_065_unit"><option value="TON">Ton</option><option value="KG">KG</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>0.70 - 0.75 mm Fiyatı</label>
+                    <div class="price-input-row">
+                        <input type="number" id="ds_070_075" placeholder="Değer" step="any">
+                        <select id="ds_070_075_cur"><option value="USD">$</option><option value="TL">₺</option></select>
+                        <select id="ds_070_075_unit"><option value="TON">Ton</option><option value="KG">KG</option></select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>0.80 - 2.00 mm Fiyatı</label>
+                    <div class="price-input-row">
+                        <input type="number" id="ds_080_200" placeholder="Değer" step="any">
+                        <select id="ds_080_200_cur"><option value="USD">$</option><option value="TL">₺</option></select>
+                        <select id="ds_080_200_unit"><option value="TON">Ton</option><option value="KG">KG</option></select>
+                    </div>
+                </div>
+            </div>
+
+            <h4 style="margin-bottom: 10px;">Diğer Ürün Fiyatları</h4>
+            <div class="table-responsive" style="max-height: 220px; overflow-y: auto;">
+                <table id="priceTableInputs">
+                    <thead>
+                        <tr>
+                            <th>Ürün İsmi</th>
+                            <th>Fiyat, Birim ve Tipi ($/₺ - Ton/KG)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="priceTableBody">
+                        <!-- Dinamik dolacak -->
+                    </tbody>
+                </table>
+            </div>
+
+            <div style="margin-top: 20px; text-align: right;">
+                <button type="button" class="btn btn-success" onclick="saveGlobalPrices()">💾 Fiyatları ve Oranları Kaydet</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HESAPLAMA DETAY MODALI -->
+    <div class="modal-overlay" id="calcModal">
+        <div class="modal-box large">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 style="font-size: 1.2rem;" id="calcTitle">Sevkiyat Fiyat Hesaplama</h3>
+                <button class="btn btn-outline btn-sm" onclick="closeCalcModal()">❌ Kapat</button>
+            </div>
+            <div id="calcContent"></div>
+            <div style="margin-top: 20px; text-align: right; display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" class="btn btn-primary" onclick="printCalcModalContent()">🖨️ Hesap Fişini Yazdır</button>
+                <button type="button" class="btn btn-secondary" onclick="closeCalcModal()">Kapat</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ŞİFRE DOĞRULAMA MODALI -->
     <div class="modal-overlay" id="passwordModal" style="display: none; z-index: 10000;">
         <div class="modal-box">
             <div class="modal-title">🔒 Cihaz Doğrulama</div>
@@ -689,7 +842,7 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getDatabase, ref, push, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-        // --- CİHAZ ŞİFRE KONTROLÜ (LOCALSTORAGE) ---
+        // --- CİHAZ ŞİFRE KONTROLÜ ---
         function verifyDeviceAccess() {
             const isAuthorized = localStorage.getItem("sevk_device_authorized");
             if (isAuthorized !== "true") {
@@ -710,7 +863,6 @@
             }
         };
 
-        // Sayfa açıldığında şifre kontrolünü çalıştır
         verifyDeviceAccess();
 
         // FIREBASE YAPILANDIRMASI
@@ -724,7 +876,6 @@
             appId: "1:489142891598:web:cebe2d3345d0476ddfbf1f"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
 
@@ -734,8 +885,22 @@
         let editingProductId = null;
         let isStep3Approved = false;
         let allShipments = {};
+        let globalPrices = {};
 
-        // KLAVYEDEKİ OK TUŞLARI İLE VEYA SCROLL İLE DEĞER DEĞİŞMESİNİ ENGELLE
+        // STANDART ÜRÜN LİSTESİ
+        const standardProductsList = [
+            "85'LİK DİKME",
+            "110'LUK DİKME",
+            "160'LIK DİKME",
+            "139'LUK BORU",
+            "8 GEN 102'LİK BORU",
+            "ÇELİK ETEK",
+            "BOY KESME",
+            "DİLME İŞÇİLİĞİ",
+            "YAN BANT"
+        ];
+
+        // KLAVYE / SCROLL ENGELLEME
         document.addEventListener('keydown', function(e) {
             if ((e.key === "ArrowUp" || e.key === "ArrowDown") && e.target.type === "number") {
                 e.preventDefault();
@@ -747,7 +912,7 @@
             }
         });
 
-        // KALINLIK GİRDİSİNİ DÜZENLEME (050 -> 0.50 YAPMA)
+        // KALINLIK GİRDİSİNİ DÜZENLEME (050 -> 0.50)
         const kalinlikElem = document.getElementById("step2Kalinlik");
         kalinlikElem.addEventListener("input", function(e) {
             let val = e.target.value.replace(',', '.');
@@ -758,7 +923,7 @@
             }
         });
 
-        // BAGLANTI DURUMUNU TESPİT ET
+        // FIREBASE BAĞLANTI DURUMU
         const connectedRef = ref(db, ".info/connected");
         onValue(connectedRef, (snap) => {
             const ledDot = document.getElementById("ledDot");
@@ -772,15 +937,321 @@
             }
         });
 
-        // TARIH FİLTRESİNİ BUGÜNE AYARLA
         document.getElementById("historyDateFilter").value = new Date().toISOString().split('T')[0];
 
-        // FIREBASE'den CANLI VERİ DİNLEME
+        // FIREBASE'DEN CANLI VERİ VE FİYATLARI DİNLEME
         const shipmentsRef = ref(db, "sevkiyatlar");
         onValue(shipmentsRef, (snapshot) => {
             allShipments = snapshot.val() || {};
             renderHistoryList();
         });
+
+        const settingsRef = ref(db, "ayarlar");
+        onValue(settingsRef, (snapshot) => {
+            globalPrices = snapshot.val() || { exchangeRate: 0, cashRate: 0, kdvRate: 0, prices: {}, dilmePrices: {} };
+        });
+
+        // --- FİYAT YÖNETİM MODAL FONKSİYONLARI ---
+        window.openPriceModal = function() {
+            document.getElementById("modalExchangeRate").value = globalPrices.exchangeRate || "";
+            document.getElementById("modalCashRate").value = globalPrices.cashRate || "";
+            document.getElementById("modalKdvRate").value = globalPrices.kdvRate || "";
+            
+            const dPrices = globalPrices.dilmePrices || {};
+            
+            const setDilmeField = (key, prefix) => {
+                const item = dPrices[key];
+                document.getElementById(prefix).value = (item && item.val !== undefined) ? item.val : (typeof item === 'number' ? item : "");
+                document.getElementById(prefix + "_cur").value = (item && item.cur) ? item.cur : "USD";
+                document.getElementById(prefix + "_unit").value = (item && item.unit) ? item.unit : "TON";
+            };
+
+            setDilmeField("045", "ds_045");
+            setDilmeField("050", "ds_050");
+            setDilmeField("055", "ds_055");
+            setDilmeField("060_065", "ds_060_065");
+            setDilmeField("070_075", "ds_070_075");
+            setDilmeField("080_200", "ds_080_200");
+
+            const tbody = document.getElementById("priceTableBody");
+            const currentPrices = globalPrices.prices || {};
+            
+            tbody.innerHTML = standardProductsList.map(prod => {
+                const pObj = currentPrices[prod];
+                let pVal = "";
+                let pCur = "USD";
+                let pUnit = "TON";
+                if (pObj !== undefined && pObj !== null) {
+                    if (typeof pObj === 'object') {
+                        pVal = pObj.val !== undefined ? pObj.val : "";
+                        pCur = pObj.cur || "USD";
+                        pUnit = pObj.unit || "TON";
+                    } else {
+                        pVal = pObj;
+                    }
+                }
+                return `
+                    <tr>
+                        <td><strong>${prod}</strong></td>
+                        <td>
+                            <div class="price-input-row">
+                                <input type="number" class="price-input-val" data-product="${prod}" value="${pVal}" placeholder="Değer" step="any">
+                                <select class="price-input-cur" data-product="${prod}">
+                                    <option value="USD" ${pCur === 'USD' ? 'selected' : ''}>$</option>
+                                    <option value="TL" ${pCur === 'TL' ? 'selected' : ''}>₺</option>
+                                </select>
+                                <select class="price-input-unit" data-product="${prod}">
+                                    <option value="TON" ${pUnit === 'TON' ? 'selected' : ''}>Ton</option>
+                                    <option value="KG" ${pUnit === 'KG' ? 'selected' : ''}>KG</option>
+                                </select>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById("priceModal").classList.add("active");
+        };
+
+        window.closePriceModal = function() {
+            document.getElementById("priceModal").classList.remove("active");
+        };
+
+        window.saveGlobalPrices = function() {
+            const exRate = parseFloat(document.getElementById("modalExchangeRate").value) || 0;
+            const cashRate = parseFloat(document.getElementById("modalCashRate").value) || 0;
+            const kdvRate = parseFloat(document.getElementById("modalKdvRate").value) || 0;
+            
+            const getDilmeData = (prefix) => ({
+                val: parseFloat(document.getElementById(prefix).value) || 0,
+                cur: document.getElementById(prefix + "_cur").value,
+                unit: document.getElementById(prefix + "_unit").value
+            });
+
+            const dilmePrices = {
+                "045": getDilmeData("ds_045"),
+                "050": getDilmeData("ds_050"),
+                "055": getDilmeData("ds_055"),
+                "060_065": getDilmeData("ds_060_065"),
+                "070_075": getDilmeData("ds_070_075"),
+                "080_200": getDilmeData("ds_080_200")
+            };
+
+            const valInputs = document.querySelectorAll(".price-input-val");
+            const newPrices = {};
+
+            valInputs.forEach(inp => {
+                const prodName = inp.getAttribute("data-product");
+                const curSel = document.querySelector(`.price-input-cur[data-product="${prodName}"]`).value;
+                const unitSel = document.querySelector(`.price-input-unit[data-product="${prodName}"]`).value;
+                newPrices[prodName] = {
+                    val: parseFloat(inp.value) || 0,
+                    cur: curSel,
+                    unit: unitSel
+                };
+            });
+
+            const settingsData = {
+                exchangeRate: exRate,
+                cashRate: cashRate,
+                kdvRate: kdvRate,
+                dilmePrices: dilmePrices,
+                prices: newPrices
+            };
+
+            set(ref(db, "ayarlar"), settingsData)
+                .then(() => {
+                    showAlert("Başarılı", "Fiyatlar, kur, birimler ve oranlar başarıyla kaydedildi.");
+                    closePriceModal();
+                })
+                .catch(err => {
+                    showAlert("Hata", "Kaydedilirken hata oluştu: " + err.message);
+                });
+        };
+
+        // --- DİLME SAC KALINLIĞINA GÖRE FİYAT VE BİRİM BULUCU ---
+        function getDilmeSacPriceObj(kalinlik, dilmePrices) {
+            if (!kalinlik || !dilmePrices) return { val: 0, cur: 'USD', unit: 'TON' };
+            const k = parseFloat(kalinlik);
+
+            let key = "";
+            if (Math.abs(k - 0.45) < 0.001) key = "045";
+            else if (Math.abs(k - 0.50) < 0.001) key = "050";
+            else if (Math.abs(k - 0.55) < 0.001) key = "055";
+            else if (k >= 0.599 && k <= 0.651) key = "060_065";
+            else if (k >= 0.699 && k <= 0.751) key = "070_075";
+            else if (k >= 0.799 && k <= 2.001) key = "080_200";
+
+            if (key && dilmePrices[key]) {
+                const item = dilmePrices[key];
+                if (typeof item === 'object') return { val: item.val || 0, cur: item.cur || 'USD', unit: item.unit || 'TON' };
+                return { val: item || 0, cur: 'USD', unit: 'TON' };
+            }
+            return { val: 0, cur: 'USD', unit: 'TON' };
+        }
+
+        // --- HESAPLAMA MOTORU ---
+        window.calculateShipmentCost = function(id) {
+            const item = allShipments[id];
+            if (!item) return;
+
+            document.getElementById("calcTitle").textContent = `${item.firma} - ${item.plaka} Fiyat Hesaplama`;
+
+            const exRate = globalPrices.exchangeRate || 0;
+            const cashRate = globalPrices.cashRate || 0;
+            const kdvRate = globalPrices.kdvRate || 0;
+            const prices = globalPrices.prices || {};
+            const dilmePrices = globalPrices.dilmePrices || {};
+            const itemsToCalc = item.products || [];
+
+            const groupedMap = new Map();
+            itemsToCalc.forEach(prod => {
+                const nameKey = prod.name.trim();
+                const kalStr = (prod.kalinlik !== null && prod.kalinlik !== undefined && prod.kalinlik !== '') ? prod.kalinlik : '-';
+                const groupKey = `${nameKey}_${kalStr}`;
+
+                if (groupedMap.has(groupKey)) {
+                    const existing = groupedMap.get(groupKey);
+                    existing.agirlik += prod.agirlik;
+                    existing.kalemAdedi += 1;
+                } else {
+                    groupedMap.set(groupKey, {
+                        name: prod.name,
+                        kalinlik: kalStr,
+                        agirlik: prod.agirlik,
+                        kalemAdedi: 1
+                    });
+                }
+            });
+
+            const groupedList = Array.from(groupedMap.values());
+
+            let totalYalinTL = 0;
+            let rowsHtml = '';
+
+            groupedList.forEach((prod, idx) => {
+                let unitPrice = 0;
+                let unitCur = 'USD';
+                let unitType = 'TON';
+
+                if (prod.name === "DİLME SAC" && prod.kalinlik !== '-') {
+                    const pObj = getDilmeSacPriceObj(prod.kalinlik, dilmePrices);
+                    unitPrice = pObj.val;
+                    unitCur = pObj.cur;
+                    unitType = pObj.unit;
+                } else {
+                    const pObj = prices[prod.name];
+                    if (pObj !== undefined && pObj !== null) {
+                        if (typeof pObj === 'object') {
+                            unitPrice = pObj.val !== undefined ? pObj.val : 0;
+                            unitCur = pObj.cur || 'USD';
+                            unitType = pObj.unit || 'TON';
+                        } else {
+                            unitPrice = pObj;
+                            unitCur = 'USD';
+                            unitType = 'TON';
+                        }
+                    }
+                }
+
+                const multiplier = (unitType === 'KG') ? prod.agirlik : (prod.agirlik / 1000);
+                
+                let lineYalinTL = 0;
+                if (unitCur === 'TL' || unitCur === '₺') {
+                    lineYalinTL = multiplier * unitPrice;
+                } else {
+                    const lineUSD = multiplier * unitPrice;
+                    lineYalinTL = lineUSD * exRate;
+                }
+
+                totalYalinTL += lineYalinTL;
+
+                const lineCashTL = lineYalinTL * (1 + (cashRate / 100)); 
+                const lineKdvTL = lineYalinTL * (1 + (kdvRate / 100)); 
+
+                const kalemBadge = prod.kalemAdedi > 1 
+                    ? `<span style="background:#dbeafe; color:#1e40af; font-size:0.75rem; padding:2px 6px; border-radius:10px; margin-left:4px; font-weight:bold;">${prod.kalemAdedi} Kalem Birleştirildi</span>` 
+                    : '';
+
+                const curSymbol = (unitCur === 'TL' || unitCur === '₺') ? '₺' : '$';
+                const unitText = (unitType === 'KG') ? '/KG' : '/Ton';
+                const formattedPriceDisplay = `${curSymbol}${unitPrice.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ${unitText}`;
+
+                rowsHtml += `
+                    <tr>
+                        <td>${idx + 1}</td>
+                        <td>
+                            <strong>${prod.name}</strong> 
+                            ${prod.kalinlik !== '-' ? `<small style="color:var(--text-muted);">(${prod.kalinlik} mm)</small>` : ''}
+                            ${kalemBadge}
+                        </td>
+                        <td><strong>${prod.agirlik.toLocaleString('tr-TR')} KG</strong></td>
+                        <td>${formattedPriceDisplay}</td>
+                        <td>₺${lineYalinTL.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                        ${cashRate > 0 ? `<td>₺${lineCashTL.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>` : ''}
+                        ${kdvRate > 0 ? `<td><strong>₺${lineKdvTL.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>` : ''}
+                    </tr>
+                `;
+            });
+
+            const totalCashTL = totalYalinTL * (1 + (cashRate / 100));
+            const totalKdvTL = totalYalinTL * (1 + (kdvRate / 100));
+
+            let html = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 16px; background: #f8fafc; padding: 14px; border-radius: 8px; border: 1px solid var(--border-color);">
+                    <div><strong>Döviz Kuru:</strong> ${exRate > 0 ? exRate.toLocaleString('tr-TR') + ' TL' : 'Gerekli Değil'}</div>
+                    <div><strong>Yalın TL Toplam:</strong> <span style="color:var(--primary); font-weight:bold;">₺${totalYalinTL.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div>
+                    ${cashRate > 0 ? `<div><strong>İndirimli (+%${cashRate}):</strong> <span style="color:var(--warning); font-weight:bold;">₺${totalCashTL.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div>` : ''}
+                    ${kdvRate > 0 ? `<div><strong>KDV Dahil (+%${kdvRate}):</strong> <span style="color:var(--success); font-weight:bold; font-size: 1.1rem;">₺${totalKdvTL.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span></div>` : ''}
+                </div>
+
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Ürün İsmi & Kalınlık</th>
+                                <th>Toplam Ağırlık</th>
+                                <th>Birim Fiyatı</th>
+                                <th>Yalın Tutar (TL)</th>
+                                ${cashRate > 0 ? `<th>İndirimli +%${cashRate} (TL)</th>` : ''}
+                                ${kdvRate > 0 ? `<th>KDV Dahil +%${kdvRate} (TL)</th>` : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById("calcContent").innerHTML = html;
+            document.getElementById("calcModal").classList.add("active");
+        };
+
+        window.closeCalcModal = function() {
+            document.getElementById("calcModal").classList.remove("active");
+        };
+
+        window.printCalcModalContent = function() {
+            const content = document.getElementById("calcContent").innerHTML;
+            const title = document.getElementById("calcTitle").textContent;
+            
+            const printArea = document.getElementById("printArea");
+            printArea.innerHTML = `
+                <div style="font-family: sans-serif; padding: 20px;">
+                    <div style="text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px;">
+                        <h2 style="margin: 0; font-size: 16pt;">${title}</h2>
+                        <p style="margin: 5px 0 0 0; font-size: 10pt;">Tarih: ${new Date().toLocaleString('tr-TR')}</p>
+                    </div>
+                    ${content}
+                </div>
+            `;
+
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        };
 
         // --- GLOBAL FONKSİYONLAR ---
         window.toggleCustomTemsilci = function() {
@@ -947,7 +1418,7 @@
             `).join('');
         }
 
-        // --- 3. ADIM: ONAY VE BİRLEŞTİRME MANTIĞI ---
+        // --- 3. ADIM: BİRLEŞTİRME MANTIĞI ---
         function getMergedProducts(products) {
             const map = new Map();
             products.forEach(item => {
@@ -1095,7 +1566,7 @@
             });
         };
 
-        // --- 4. ADIM: FOTOĞRAF YÖNETİMİ VE SIKIŞTIRMA ---
+        // --- 4. ADIM: FOTOĞRAF ---
         window.handlePhotoSelect = function(e) {
             const files = e.target.files;
             if (!files || files.length === 0) return;
@@ -1235,7 +1706,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // --- 5. ADIM: GÜNLÜK SEVKİYAT VE DETAYLI RAPOR ---
+        // --- 5. ADIM: RAPOR VE HESAPLA BUTONU ---
         window.renderHistoryList = function() {
             const selectedDate = document.getElementById("historyDateFilter").value;
             const container = document.getElementById("historyListContainer");
@@ -1295,6 +1766,7 @@
                         <td>${item.totalPieces} Parça</td>
                         <td><strong>${item.totalKg.toLocaleString('tr-TR')} KG</strong></td>
                         <td style="text-align: right; white-space: nowrap;">
+                            <button class="btn btn-secondary btn-sm" onclick="calculateShipmentCost('${item.id}')">🧮 Hesapla</button>
                             <button class="btn btn-outline btn-sm" onclick="inspectShipment('${item.id}')">🔍 İncele</button>
                             <button class="btn btn-primary btn-sm" onclick="printHistoryShipment('${item.id}')">🖨️ Yazdır</button>
                             <button class="btn btn-danger btn-sm" onclick="deleteHistoryShipment('${item.id}')">🗑️ Sil</button>
@@ -1474,7 +1946,7 @@
             }, 100);
         }
 
-        // --- ORTADA AÇILAN MODAL / DIALOG SİSTEMİ ---
+        // --- MODAL YÖNETİMİ ---
         window.showAlert = function(title, desc) {
             document.getElementById("modalTitle").textContent = title;
             document.getElementById("modalDesc").textContent = desc;
