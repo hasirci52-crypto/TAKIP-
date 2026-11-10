@@ -375,7 +375,7 @@
         .badge-pending { background: #fef3c7; color: #b45309; }
         .badge-printed { background: #dcfce7; color: #15803d; }
 
-        /* --- CUSTOM CENTERED MODAL (TAM EKRAN UYUMLU) --- */
+        /* --- CUSTOM CENTERED MODAL --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; right: 0; bottom: 0;
@@ -429,7 +429,6 @@
             flex-wrap: wrap;
         }
 
-        /* --- GENİŞ MODALLAR İÇİN TAM UYUM --- */
         .modal-box.large {
             max-width: 900px;
             text-align: left;
@@ -483,7 +482,7 @@
             📦 SEVKİYAT VE YÜKLEME YÖNETİMİ
         </div>
         <div class="status-right-group">
-            <button class="btn btn-warning btn-sm" onclick="openPriceModal()">⚙️ Fiyat Listesini Güncelle</button>
+            <button class="btn btn-warning btn-sm" onclick="promptPricePassword()">⚙️ Fiyat Listesini Güncelle</button>
             <div class="status-indicator">
                 <div id="ledDot" class="led-dot"></div>
                 <span id="ledStatusText">BAĞLANTI BEKLENİYOR...</span>
@@ -687,6 +686,36 @@
     <!-- GİZLİ YAZDIRMA ALANI -->
     <div id="printArea"></div>
 
+    <!-- FİYAT GÜNCELLEME ŞİFRE MODALI (ŞİFRE: 25) -->
+    <div class="modal-overlay" id="priceAuthModal">
+        <div class="modal-box">
+            <div class="modal-title">🔒 Şifre Doğrulama</div>
+            <div class="modal-desc">Fiyat listesini güncellemek için lütfen şifreyi giriniz:</div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <input type="password" id="priceAuthPasswordInput" placeholder="Şifre" maxlength="10" style="text-align: center; font-size: 1.2rem; letter-spacing: 3px;" onkeydown="if(event.key === 'Enter') verifyPricePassword()">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closePriceAuthModal()">Vazgeç</button>
+                <button class="btn btn-warning" onclick="verifyPricePassword()">Giriş Yap</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- HESAPLA ŞİFRE MODALI (ŞİFRE: 20) -->
+    <div class="modal-overlay" id="calcAuthModal">
+        <div class="modal-box">
+            <div class="modal-title">🔒 Hesaplama Şifresi</div>
+            <div class="modal-desc">Fiyat hesaplama ekranını açmak için lütfen şifreyi giriniz:</div>
+            <div class="form-group" style="margin-bottom: 16px;">
+                <input type="password" id="calcAuthPasswordInput" placeholder="Şifre" maxlength="10" style="text-align: center; font-size: 1.2rem; letter-spacing: 3px;" onkeydown="if(event.key === 'Enter') verifyCalcPassword()">
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-outline" onclick="closeCalcAuthModal()">Vazgeç</button>
+                <button class="btn btn-primary" onclick="verifyCalcPassword()">Giriş Yap</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ÜRÜN FİYATLARI, KUR, İNDİRİMLİ VE KDV GÜNCELLEME MODALI -->
     <div class="modal-overlay" id="priceModal">
         <div class="modal-box large">
@@ -801,7 +830,7 @@
         </div>
     </div>
 
-    <!-- ŞİFRE DOĞRULAMA MODALI -->
+    <!-- İLK GİRİŞ ŞİFRE DOĞRULAMA MODALI -->
     <div class="modal-overlay" id="passwordModal" style="display: none; z-index: 10000;">
         <div class="modal-box">
             <div class="modal-title">🔒 Cihaz Doğrulama</div>
@@ -886,6 +915,7 @@
         let isStep3Approved = false;
         let allShipments = {};
         let globalPrices = {};
+        let pendingCalcShipmentId = null;
 
         // STANDART ÜRÜN LİSTESİ
         const standardProductsList = [
@@ -950,6 +980,57 @@
         onValue(settingsRef, (snapshot) => {
             globalPrices = snapshot.val() || { exchangeRate: 0, cashRate: 0, kdvRate: 0, prices: {}, dilmePrices: {} };
         });
+
+        // --- FİYAT GÜNCELLEME ŞİFRE KONTROLÜ (ŞİFRE: 25) ---
+        window.promptPricePassword = function() {
+            const pwdInput = document.getElementById("priceAuthPasswordInput");
+            pwdInput.value = "";
+            document.getElementById("priceAuthModal").classList.add("active");
+            setTimeout(() => pwdInput.focus(), 150);
+        };
+
+        window.closePriceAuthModal = function() {
+            document.getElementById("priceAuthModal").classList.remove("active");
+        };
+
+        window.verifyPricePassword = function() {
+            const pwd = document.getElementById("priceAuthPasswordInput").value.trim();
+            if (pwd === "25") {
+                closePriceAuthModal();
+                openPriceModal();
+            } else {
+                showAlert("Hatalı Şifre", "Fiyat güncelleme şifresi yanlış!");
+                document.getElementById("priceAuthPasswordInput").value = "";
+                document.getElementById("priceAuthPasswordInput").focus();
+            }
+        };
+
+        // --- HESAPLA ŞİFRE KONTROLÜ (ŞİFRE: 20) ---
+        window.calculateShipmentCost = function(id) {
+            pendingCalcShipmentId = id;
+            const pwdInput = document.getElementById("calcAuthPasswordInput");
+            pwdInput.value = "";
+            document.getElementById("calcAuthModal").classList.add("active");
+            setTimeout(() => pwdInput.focus(), 150);
+        };
+
+        window.closeCalcAuthModal = function() {
+            document.getElementById("calcAuthModal").classList.remove("active");
+            pendingCalcShipmentId = null;
+        };
+
+        window.verifyCalcPassword = function() {
+            const pwd = document.getElementById("calcAuthPasswordInput").value.trim();
+            if (pwd === "20") {
+                const targetId = pendingCalcShipmentId;
+                closeCalcAuthModal();
+                executeCalculation(targetId);
+            } else {
+                showAlert("Hatalı Şifre", "Hesaplama şifresi yanlış!");
+                document.getElementById("calcAuthPasswordInput").value = "";
+                document.getElementById("calcAuthPasswordInput").focus();
+            }
+        };
 
         // --- FİYAT YÖNETİM MODAL FONKSİYONLARI ---
         window.openPriceModal = function() {
@@ -1090,8 +1171,8 @@
             return { val: 0, cur: 'USD', unit: 'TON' };
         }
 
-        // --- HESAPLAMA MOTORU ---
-        window.calculateShipmentCost = function(id) {
+        // --- HESAPLAMA MOTORU (ŞİFRE ONAYI SONRASI ÇALIŞIR) ---
+        function executeCalculation(id) {
             const item = allShipments[id];
             if (!item) return;
 
@@ -1227,7 +1308,7 @@
 
             document.getElementById("calcContent").innerHTML = html;
             document.getElementById("calcModal").classList.add("active");
-        };
+        }
 
         window.closeCalcModal = function() {
             document.getElementById("calcModal").classList.remove("active");
@@ -1706,7 +1787,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
-        // --- 5. ADIM: RAPOR VE HESAPLA BUTONU ---
+        // --- 5. ADIM: RAPOR VE HESAPla BUTONU ---
         window.renderHistoryList = function() {
             const selectedDate = document.getElementById("historyDateFilter").value;
             const container = document.getElementById("historyListContainer");
